@@ -136,8 +136,6 @@ def split_image(image_path, output_folder, index, files_count):
     print(f'right {right_filename}')
 
 if __name__ == "__main__":
-    # input_folder = r"E:\Downloads\Figmaのきほん"  # 入力フォルダのパス
-    # input_folder = r'D:\temp\manual\source'
-    input_folder = r"E:\Downloads\Figmaのきほん"
+    input_folder = r"E:\Downloads\Figmaのきほん" # 入力元のフォルダ
     output_folder = r"D:\temp\manual"  # 出力フォルダのパス
     split_images(input_folder, output_folder, include_subfolders=True)
