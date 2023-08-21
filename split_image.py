@@ -1,3 +1,4 @@
+import zipfile
 import os
 from PIL import Image, ImageChops
 
@@ -134,6 +135,14 @@ def split_image(image_path, output_folder, index, files_count):
 
     print(f'left {left_filename}')
     print(f'right {right_filename}')
+
+
+
+def archive(output_folder):
+
+    with zipfile.ZipFile(dir_name, 'w') as z:
+        z.write(output_folder)
+
 
 if __name__ == "__main__":
     input_folder = r"E:\Downloads\Figmaのきほん" # 入力元のフォルダ
