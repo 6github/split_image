@@ -1,4 +1,4 @@
-import zipfile
+import shutil 
 import os
 from PIL import Image, ImageChops
 
@@ -138,13 +138,23 @@ def split_image(image_path, output_folder, index, files_count):
 
 
 
-def archive(output_folder):
+def archive_zip(input_folder, output_folder):
+    # ディレクトリ名の取得
+    zip_filename = os.path.basename(input_folder)
+    root_name = os.path.split(input_folder)[0]
+    base_name = os.path.split(input_folder)[1]
+    zip_path = os.path.join(output_folder, zip_filename)
 
-    with zipfile.ZipFile(dir_name, 'w') as z:
-        z.write(output_folder)
+    shutil.make_archive(zip_path, 'zip', root_dir=root_name, base_dir=base_name)
 
+def main(input_folder, output_folder, include_subfolders=False):
+    split_images(input_folder, output_folder, include_subfolders)
+    archive_zip(input_folder, output_folder)
 
 if __name__ == "__main__":
-    input_folder = r"E:\Downloads\Figmaのきほん" # 入力元のフォルダ
+    # input_folder = r"E:\Downloads\Figmaのきほん" # 入力元のフォルダ
+    input_folder = r"D:\temp\manual\folder1"
     output_folder = r"D:\temp\manual"  # 出力フォルダのパス
-    split_images(input_folder, output_folder, include_subfolders=True)
+
+    # main(input_folder, output_folder, include_subfolders=True)
+    archive_zip(input_folder, output_folder)
