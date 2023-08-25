@@ -1,6 +1,7 @@
 import shutil 
 import os
 from PIL import Image, ImageChops
+import pprint
 
 def split_images(input_folder, output_folder, include_subfolders=False):
     # include_subfoldersにTrueを指定するとサブフォルダも対象になります
@@ -123,9 +124,6 @@ def split_image(image_path, output_folder, index, files_count):
     path_name = input_folder.rstrip(os.path.sep)
     dir_path, folder_name = os.path.split(path_name)
 
-    # 元のファイル名から名前を付ける場合はこちらを使用してください
-    # base_filename = os.path.splitext(os.path.basename(image_path))
-
     left_filename = os.path.join(output_folder, f"{folder_name}_{index_left:0{digit_count}d}.png")
     right_filename = os.path.join(output_folder, f"{folder_name}_{index_right:0{digit_count}d}.png")
     
@@ -141,11 +139,14 @@ def split_image(image_path, output_folder, index, files_count):
 def archive_zip(input_folder, output_folder):
     # ディレクトリ名の取得
     zip_filename = os.path.basename(input_folder)
-    root_name = os.path.split(input_folder)[0]
-    base_name = os.path.split(input_folder)[1]
     zip_path = os.path.join(output_folder, zip_filename)
 
-    shutil.make_archive(zip_path, 'zip', root_dir=root_name, base_dir=base_name)
+    print(f'【zip_filename】{zip_filename}')
+    print(f'【zip_path】{zip_path}')
+    print(f'【output_folder】{output_folder}')
+
+    # shutil.make_archive(zip_path, 'zip', root_dir=zip_path, base_dir=zip_path)
+    shutil.make_archive(zip_path, 'zip', root_dir=output_folder, base_dir=zip_filename)
 
 def main(input_folder, output_folder, include_subfolders=False):
     split_images(input_folder, output_folder, include_subfolders)
@@ -153,8 +154,8 @@ def main(input_folder, output_folder, include_subfolders=False):
 
 if __name__ == "__main__":
     # input_folder = r"E:\Downloads\Figmaのきほん" # 入力元のフォルダ
-    input_folder = r"D:\temp\manual\folder1"
+    input_folder = r"D:\temp\manual\input_folder\Figmaのきほん"
     output_folder = r"D:\temp\manual"  # 出力フォルダのパス
 
-    # main(input_folder, output_folder, include_subfolders=True)
-    archive_zip(input_folder, output_folder)
+    main(input_folder, output_folder, include_subfolders=True)
+    # archive_zip(input_folder, output_folder)
