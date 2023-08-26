@@ -2,32 +2,38 @@ import shutil
 import os
 from PIL import Image, ImageChops
 
-def make_temp_dir(input_dir, temp_dir):
-    # inputフォルダと同名のフォルダをtempフォルダ下に作成する
-    # 同名のファイルが在れば、フォルダごと削除して、作成しなおす
-    # 作成したtempフォルダのパスを返します
+def make_temp_dir(input_path, temp_path):
+    # 「temp_path\コード名\inputのフォルダ」のフォルダを作成する
+    # inputのフォルダと同名のファイルが在れば、フォルダごと削除して作成しなおす
+    # 作成したtempフォルダのパスを返す
 
-    temp_dir= os.path.join(temp_dir, os.path.basename(input_dir))
+    # 末尾のセパレートを削除
+    input_path = input_path.rstrip(os.path.sep)
 
-    print(f'【input_dir】{input_dir}')
-    print(f'【temp_dir】{temp_dir}')
+    # tempフォルダ下にスプリクトファイル名を作成
+    code_name = os.path.basename(__file__)
+    temp_dir = os.path.basename(input_path)
+    paths = [code_name, temp_dir]
 
-    try:
-        os.mkdir(temp_dir)
-    except FileExistsError as error:
-        print(error)
-        shutil.rmtree(temp_dir)
-        os.mkdir(temp_dir)
-    
-    return temp_dir
+    for path in paths:
+        temp_path = os.path.join(temp_path, path)
 
-def split_images(input_dir, temp_dir, include_subfolders=False):
+        try:
+            os.mkdir(temp_path)
+        except FileExistsError:
+            if path == temp_dir:
+                shutil.rmtree(temp_path)
+                os.mkdir(temp_path)
+
+    return temp_path 
+
+def split_images(input_path, temp_path, include_subfolders=False):
     # include_subfoldersにTrueを指定するとサブフォルダも対象になります
 
     image_files = []
     
     # 入力フォルダ内の画像ファイルのリストを作成
-    for root, _, files in os.walk(input_dir):
+    for root, _, files in os.walk(input_path):
         for file in files:
             if file.lower().endswith(('.png', '.jpg', '.jpeg')):
                 image_files.append(os.path.join(root, file))
@@ -42,9 +48,9 @@ def split_images(input_dir, temp_dir, include_subfolders=False):
     # 画像ファイルを順番に分割して保存
     for index, image_path in enumerate(image_files):
         if two_pages(image_path):
-            crop_center_width_half(image_path, temp_dir, index, files_count)
+            crop_center_width_half(image_path, temp_path, index, files_count)
         else:
-            split_image(image_path, temp_dir, index, files_count)
+            split_image(image_path, temp_path, index, files_count)
 
 def two_pages(image_path):
     # cropの左上のx座標が元座標の1/4以上だとTrue, 1/4以下だとFalseを返す
@@ -78,7 +84,7 @@ def crop_size(image_path):
     # print(f'【Crop Range】{x0, y0, x1, y1}')
     return x0, y0
 
-def crop_center_width_half(image_path, temp_dir, index, files_count):
+def crop_center_width_half(image_path, temp_path, index, files_count):
     # 横サイズの半分で中央部分を抽出したPILイメージを返す
     # 中央部に１ページしかない画像に使用するといい感じに抜き出せる
 
@@ -100,17 +106,19 @@ def crop_center_width_half(image_path, temp_dir, index, files_count):
     digit_count = len(str(files_count))
 
     # inputファイルからフォルダ名を求める
-    path_name = input_dir.rstrip(os.path.sep)
-    dir_path, folder_name = os.path.split(path_name)
+    # path_name = input_dir.rstrip(os.path.sep)
+    # dir_path, folder_name = os.path.split(path_name)
+
+    dir_name = os.path.basename(temp_path)
 
     index = index * 2 + 1
-    filename = os.path.join(temp_dir, f"{folder_name}_{index:0{digit_count}d}.png")
+    filename = os.path.join(temp_path, f"{dir_name}_{index:0{digit_count}d}.png")
     
     # 画像を保存
     cropped_image.save(filename)
     print(f'center {filename}')
 
-def split_image(image_path, temp_dir, index, files_count):
+def split_image(image_path, temp_path, index, files_count):
     original_image = Image.open(image_path)
     width, height = original_image.size
     half_width = width // 2
@@ -130,11 +138,13 @@ def split_image(image_path, temp_dir, index, files_count):
     digit_count = len(str(files_count))
 
     # inputファイルからフォルダ名を求める
-    path_name = input_dir.rstrip(os.path.sep)
-    dir_path, folder_name = os.path.split(path_name)
+    # path_name = input_dir.rstrip(os.path.sep)
+    # dir_path, folder_name = os.path.split(path_name)
 
-    left_filename = os.path.join(temp_dir, f"{folder_name}_{index_left:0{digit_count}d}.png")
-    right_filename = os.path.join(temp_dir, f"{folder_name}_{index_right:0{digit_count}d}.png")
+    dir_name = os.path.basename(temp_path)
+
+    left_filename = os.path.join(temp_path, f"{dir_name}_{index_left:0{digit_count}d}.png")
+    right_filename = os.path.join(temp_path, f"{dir_name}_{index_right:0{digit_count}d}.png")
     
     # 画像を保存
     left_half.save(left_filename)
@@ -143,29 +153,24 @@ def split_image(image_path, temp_dir, index, files_count):
     print(f'left {left_filename}')
     print(f'right {right_filename}')
 
-
-
-def archive_zip(input_dir, temp_dir):
+def archive_zip(input_path, temp_path):
     # ディレクトリ名の取得
-    zip_filename = os.path.basename(input_dir)
-    zip_path = os.path.join(temp_dir, zip_filename)
+    zip_filename = os.path.basename(input_path)
+    temp_path_root = os.path.dirname(temp_path)
+     
+    shutil.make_archive(input_path, 'zip', root_dir=temp_path_root, base_dir=zip_filename)
 
-    print(f'【zip_filename】{zip_filename}')
-    print(f'【zip_path】{zip_path}')
-    print(f'【temp_dir】{temp_dir}')
-
-    # shutil.make_archive(zip_path, 'zip', root_dir=temp_dir, base_dir=zip_filename)
-
-def main(input_dir, include_subfolders=False):
-    code_name = os.path.basename(__file__)
-    temp_dir = os.path.join(r'D:\temp', code_name)
-    print(make_temp_dir(input_dir, temp_dir))
-    # split_images(input_dir, temp_dir, include_subfolders)
-    # archive_zip(input_dir, temp_dir)
+def main(input_path, include_subfolders=False):
+    temp_path = r'D:\temp'
+    temp_path = make_temp_dir(input_path, temp_path)
+    print(input_path, temp_path)
+    split_images(input_path, temp_path, include_subfolders)
+    archive_zip(input_path, temp_path)
 
 if __name__ == "__main__":
     # input_dir = r"E:\Downloads\Figmaのきほん" # 入力元のフォルダ
-    input_dir = r"D:\temp\manual\input_dir\Figmaのきほん"
+    # input_path = r"D:\temp\manual\input_folder\Figmaのきほん"
+    input_path = r'E:\Downloads\Figmaのきほん'
 
-    main(input_dir, include_subfolders=True)
+    main(input_path, include_subfolders=True)
     # archive_zip(input_dir, temp_dir)
