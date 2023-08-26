@@ -174,3 +174,4 @@ if __name__ == "__main__":
 
     main(input_path, include_subfolders=True)
     # archive_zip(input_dir, temp_dir)
+
