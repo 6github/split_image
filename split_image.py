@@ -167,6 +167,108 @@ def main(input_path, include_subfolders=False):
     split_images(input_path, temp_path, include_subfolders)
     archive_zip(input_path, temp_path)
 
+
+
+
+
+import os
+import shutil
+import tkinter as tk
+from tkinterdnd2 import DND_FILES, TkinterDnD
+
+from PIL import Image, ImageChops
+
+def split_images(input_path, temp_path, include_subfolders=False):
+    # 以前のsplit_images関数のコードをここに入れる
+    # include_subfoldersにTrueを指定するとサブフォルダも対象になります
+
+    image_files = []
+    
+    # 入力フォルダ内の画像ファイルのリストを作成
+    for root, _, files in os.walk(input_path):
+        for file in files:
+            if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                image_files.append(os.path.join(root, file))
+        
+        if not include_subfolders:
+            break
+    files_count = len(image_files)
+    
+    # 画像ファイルをタイムスタンプの昇順でソート
+    image_files.sort(key=lambda file: os.path.getmtime(file))
+
+    # 画像ファイルを順番に分割して保存
+    for index, image_path in enumerate(image_files):
+        if two_pages(image_path):
+            crop_center_width_half(image_path, temp_path, index, files_count)
+        else:
+            split_image(image_path, temp_path, index, files_count)
+
+def two_pages(image_path):
+    # cropの左上のx座標が元座標の1/4以上だとTrue, 1/4以下だとFalseを返す
+    source_img_width, _ = Image.open(image_path).size
+    crop_x, _ = crop_size(image_path)
+    return True if crop_x >= source_img_width // 4 else False
+
+
+
+def archive_zip(input_path, temp_path):
+    # 以前のarchive_zip関数のコードをここに入れる
+    # ...
+    zip_filename = os.path.basename(input_path)
+    temp_path_root = os.path.dirname(temp_path)
+     
+    shutil.make_archive(input_path, 'zip', root_dir=temp_path_root, base_dir=zip_filename)
+
+
+
+def main(input_folder, output_folder, include_subfolders=False):
+    split_images(input_folder, output_folder, include_subfolders)
+    archive_zip(input_folder, output_folder)
+
+def run_split_and_archive():
+    input_folder = input_folder_var.get()
+    output_folder = output_folder_var.get()
+    main(input_folder, output_folder, include_subfolders=True)
+
+def on_drop(event):
+    folder_path = event.data
+    input_folder_var.set(folder_path)
+
+root = TkinterDnD.Tk()
+root.title("Image Split and Archive")
+
+# 入力フォルダ選択部分
+input_folder_label = tk.Label(root, text="Input Folder:")
+input_folder_label.pack()
+
+input_folder_var = tk.StringVar()
+input_folder_entry = tk.Entry(root, textvariable=input_folder_var)
+input_folder_entry.pack()
+
+# 出力フォルダ選択部分
+output_folder_label = tk.Label(root, text="Output Folder:")
+output_folder_label.pack()
+
+output_folder_var = tk.StringVar()
+output_folder_entry = tk.Entry(root, textvariable=output_folder_var)
+output_folder_entry.pack()
+
+# ドロップ＆ドラッグでフォルダを指定するためのラベル
+drop_label = tk.Label(root, text="Drop & Drop a folder here:", font=("Helvetica", 12), relief="solid", width=30, height=5)
+drop_label.pack()
+
+# ドロップイベントの設定
+drop_label.drop_target_register(DND_FILES)
+drop_label.dnd_bind('<<Drop>>', on_drop)
+
+# 実行ボタン
+run_button = tk.Button(root, text="Run", command=run_split_and_archive)
+run_button.pack()
+
+root.mainloop()
+
+
 if __name__ == "__main__":
     # input_dir = r"E:\Downloads\Figmaのきほん" # 入力元のフォルダ
     # input_path = r"D:\temp\manual\input_folder\Figmaのきほん"
